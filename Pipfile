@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+celery = {version = "*",extras = ['redis']}
+hug = "*"
+pydantic = "*"
+psutil = "*"
+requests = "*"
+redis = "*"
+
+[dev-packages]
+pylint = "*"
+pylint-django = "*"
+pytest = "*"
+
+[requires]
+python_version = "3.6"
+
+[pipenv]
+allow_prereleases = false

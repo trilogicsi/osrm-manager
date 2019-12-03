@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+
+  test:
+    build:
+      context: ../
+      dockerfile: docker/osrm-manager/Dockerfile
+      args:
+        debug: "true"
+    volumes:
+      - ./data:/data
+    links:
+      - redis
+    environment:
+      - CELERY_REDIS_HOST=redis
+      - OSRM_INITIAL_CONTRACT=false
+    command: ["pipenv", "run", "tests/run_tests.sh"]
+
+
+  redis:
+    image: redis:4-alpine

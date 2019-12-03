@@ -1,0 +1,6 @@
+.idea
+.vscode
+
+tests/data
+
+osrm/__pycache__

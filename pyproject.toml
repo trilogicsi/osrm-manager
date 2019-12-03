@@ -1,0 +1,27 @@
+[tool.black]
+line-length = 88
+py36 = true
+skip-numeric-underscore-normalization = true
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+
+  # The following are specific for this project
+  | node_modules
+  | migrations
+  | nbconvert_extend
+  | analysis/notebooks/output
+)/
+'''
