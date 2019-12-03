@@ -8,6 +8,8 @@ services:
       dockerfile: docker/osrm-manager/Dockerfile
       args:
         debug: "true"
+    ports:
+      - "127.0.0.1:8089:8000"
     volumes:
       - ./data:/data
     links:

@@ -3,11 +3,11 @@ API for controlling OSRM backend servers.
 """
 import re
 
-import hug
 import requests
 import requests.adapters
-from falcon import HTTP_400  # pylint: disable=no-name-in-module
+from flask import Flask, request
 from urllib3 import Retry
+from werkzeug.routing import UnicodeConverter, ValidationError, Rule
 
 from osrm.osrmcontroller import OsrmController
 from osrm.tasks import (
@@ -18,6 +18,7 @@ from osrm.tasks import (
 from osrm.tasks import extract as extract_task
 
 API_NAME = "OSRM Manager"
+OSRM_CONVERTER_NAME = "osrm"
 
 
 def retrying_requests() -> requests.Session:
@@ -37,78 +38,93 @@ def format_docstrings(docstring: bytes) -> str:
     return docstring
 
 
-def api_factory(osrm_controller: OsrmController) -> hug.API:
+def api_factory(osrm_controller: OsrmController) -> Flask:
     """
-    Build a Hug API for the specified OSRM controller instance.
+    Build a Flask API app for the specified OSRM controller instance.
     """
     # pylint: disable=unused-variable
-    # ^ hug routes are detected as unused
+    # ^ flask routes are detected as unused
 
-    router = hug.route.API(API_NAME)
+    app = Flask(__name__, static_folder=None)
+    app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # Limit uploads to 100 MB
 
-    @router.get("/status")
+    class OsrmServerNameConverter(UnicodeConverter):
+        """
+        Used to validate OSRM server names
+        """
+
+        def to_python(self, value):
+            if value not in osrm_controller.server_names:
+                raise ValidationError()
+            return super().to_python(value)
+
+    app.url_map.converters[OSRM_CONVERTER_NAME] = OsrmServerNameConverter
+
+    @app.route("/", methods=["GET"])
+    def index():
+        """
+        Return the list of available URLs
+        """
+        url_docs = {}
+
+        for rule in app.url_map.iter_rules():
+            rule: Rule
+            doc = app.view_functions[rule.endpoint].__doc__
+            if any(
+                [
+                    isinstance(converter, OsrmServerNameConverter)
+                    for converter in rule._converters.values()  # pylint: disable=protected-access
+                ]
+            ):
+                doc += "; Valid OSRM server names: " + ", ".join(
+                    osrm_controller.server_names
+                )
+
+            url_docs[str(rule)] = {
+                "allowed_methods": list(rule.methods),
+                "doc": format_docstrings(doc),
+            }
+
+        return url_docs
+
+    @app.route("/status", methods=["GET"])
     def status():
-        """Status of OSRM servers."""
+        """Status of OSRM servers"""
         # need to load controller from Redis as server process IDs could have changed
         # if OSRM server was restarted since creation of API
         recent_osrm_controller = OsrmController.get_controller_from_redis()
         return recent_osrm_controller.status()
 
-    @router.get("/osrm/{server_name}/")
-    def osrm_proxy(server_name: hug.types.one_of(osrm_controller.server_names)):
+    @app.route(
+        f"/osrm/<{OSRM_CONVERTER_NAME}:server_name>/<path:osrm_path>", methods=["GET"]
+    )
+    def osrm_proxy(server_name: str, osrm_path: str):
         """
         Proxy the request to the selected OSRM backend server.
         See ProjectOSRM backend HTTP API documentation for details
-        (https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md).
+        (https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md)
         """
         osrm_server_id = osrm_controller.get_server_id(server_name)
         port = osrm_controller.port_bindings[osrm_server_id]
 
-        response = retrying_requests().get(f"http://127.0.0.1:{port}")
-        try:
-            return response.json()
-        except ValueError:
-            return response.content
-
-    @router.sink("/osrm/")
-    def osrm_proxy_sink(request, response):
-        """
-        Proxy the requests to the appropriate OSRM server.
-        """
-        uri_parts = request.relative_uri.split("/")
-        if len(uri_parts) < 3 or uri_parts[2] not in osrm_controller.server_names:
-            response.status = HTTP_400
-            return {
-                "success": False,
-                "message": (
-                    f"Invalid server name. Must be "
-                    f"one of {', '.join(osrm_controller.server_names)}"
-                ),
-            }
-
-        server_name = uri_parts[2]
-        osrm_server_id = osrm_controller.get_server_id(server_name)
-        port = osrm_controller.port_bindings[osrm_server_id]
-        forward_url = "/".join(uri_parts[3:])
-
-        proxy_response = retrying_requests().get(
-            f"http://127.0.0.1:{port}/{forward_url}"
+        response = retrying_requests().get(
+            f"http://127.0.0.1:{port}/{osrm_path}?{request.query_string.decode()}",
+            stream=True,
         )
+        return response.raw.read(), response.status_code, response.headers.items()
 
-        try:
-            json_response = proxy_response.json()
-            return json_response
-        except ValueError:
-            return proxy_response.content
-
-    @router.post("/control/{server_name}/restart")
-    def restart(server_name: hug.types.one_of(osrm_controller.server_names)):
+    @app.route(
+        f"/control/<{OSRM_CONVERTER_NAME}:server_name>/restart", methods=["POST"]
+    )
+    def restart(server_name: str):
         """Restart the selected OSRM server."""
         restart_task.apply_async(args=(server_name,), queue=f"osrm_{server_name}_queue")
         return {"success": True}
 
-    @router.post("/control/{server_name}/extract-data")
-    def extract(server_name: hug.types.one_of(osrm_controller.server_names)):
+    @app.route(
+        f"/control/<{OSRM_CONVERTER_NAME}:server_name>/extract-data", methods=["POST"]
+    )
+    def extract(server_name: str):
         """
         Force an extraction of OSM data. You will almost always
         want to run 'contract-data' after this operation.
@@ -116,10 +132,10 @@ def api_factory(osrm_controller: OsrmController) -> hug.API:
         extract_task.apply_async(args=(server_name,), queue=f"osrm_{server_name}_queue")
         return {"success": True}
 
-    @router.post("/control/{server_name}/contract-data")
-    def contract_data(
-        body, server_name: hug.types.one_of(osrm_controller.server_names)
-    ):
+    @app.route(
+        f"/control/<{OSRM_CONVERTER_NAME}:server_name>/contract-data", methods=["POST"]
+    )
+    def contract_data(server_name: str):
         """
         Force OSRM data contraction. An additional CSV file with traffic
         data can be posted in the request body.
@@ -127,29 +143,25 @@ def api_factory(osrm_controller: OsrmController) -> hug.API:
         For CSV file format see:
         https://github.com/Project-OSRM/osrm-backend/wiki/Traffic
         """
-        server_id = osrm_controller.get_server_id(server_name)
-        osrm_server_id = server_id
+        osrm_server_id = osrm_controller.get_server_id(server_name)
         revoke_all_scheduled_tasks_for_osrm_worker(osrm_server_id)
 
-        if body is None:
+        if not request.files:
             contract_task.apply_async(
                 args=(server_name,), queue=f"osrm_{server_name}_queue"
             )
             return {"success": True, "withTraffic": False}
 
-        csv_files = {
-            filename: content
-            for filename, content in body.items()
-            if filename.endswith(".csv")
-        }
-        if len(csv_files) != 1:
+        if len(request.files) != 1 or not next(
+            request.files.values()
+        ).filename.endswith(".csv"):
             return {
                 "success": False,
                 "message": f"At most one .csv file must be provided",
             }
 
         contract_task.apply_async(
-            args=(server_name, list(csv_files.values())[0].decode()),
+            args=(server_name, next(request.files.values()).read().decode()),
             queue=f"osrm_{server_name}_queue",
         )
 
@@ -163,7 +175,4 @@ def api_factory(osrm_controller: OsrmController) -> hug.API:
 
         return {"success": True, "withTraffic": True}
 
-    osrm_proxy.__doc__ = format_docstrings(osrm_proxy.__doc__)
-    extract.__doc__ = format_docstrings(extract.__doc__)
-
-    return hug.api.API(API_NAME)
+    return app

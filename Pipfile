@@ -5,11 +5,13 @@ name = "pypi"
 
 [packages]
 celery = {version = "*",extras = ['redis']}
-hug = "*"
 pydantic = "*"
 psutil = "*"
 requests = "*"
 redis = "*"
+flask = "*"
+flask-cors = "*"
+gunicorn = {version = "*", extras = ['gevent']}
 
 [dev-packages]
 pylint = "*"

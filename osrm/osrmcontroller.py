@@ -2,7 +2,7 @@
 Controlling of OSRM servers (spawning servers,
 extracting OSM data, importing traffic, etc.).
 """
-# pylint: disable=logging-fstring-interpolation
+# pylint: disable=logging-format-interpolation
 import json
 import logging
 import os
@@ -157,13 +157,12 @@ class OsrmController:
                 f"({len(server_ids)}/{cls.SERVER_LIMIT})"
             )
 
-        port_bindings = {
-            server_id: port
-            for server_id, port in zip(
+        port_bindings = dict(
+            zip(
                 server_ids,
                 range(cls.SERVER_START_PORT, cls.SERVER_START_PORT + cls.SERVER_LIMIT),
             )
-        }
+        )
 
         if not server_ids:
             raise RuntimeError("No data files found. Cannot spawn any OSRM servers.")
@@ -185,7 +184,9 @@ class OsrmController:
         """
         # create worker and queue for each server
         for server_id in self.server_ids:
-            Process(target=self.create_osrm_worker, args=(server_id,)).start()
+            Process(
+                target=self.create_osrm_worker, args=(server_id,), daemon=True
+            ).start()
         self.save_controller_in_redis()
 
     def to_dict(self) -> Dict[str, Any]:

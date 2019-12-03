@@ -3,7 +3,7 @@ Spawns the OSRM servers and starts an HTTP API for interfacing with them.
 """
 import logging
 
-import hug
+from flask_cors import CORS
 
 from osrm import settings
 from osrm.osrmapi import api_factory
@@ -68,19 +68,33 @@ def init_serial(osrm_controller: OsrmController):
         chain.delay()
 
 
-if __name__ == "__main__":
-    # pylint: disable=invalid-name
-    # ^ Not all variables are constants!
+# pylint: disable=invalid-name
+# ^ Not all variables are constants!
 
-    logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+controller = OsrmController.init_from_data_location(settings.OSRM_DATA_DIR)
 
-    controller = OsrmController.init_from_data_location(settings.OSRM_DATA_DIR)
+app = api_factory(controller)
+CORS(app)
 
+
+def init_controller():
+    """
+    Initialize the OSRM controller.
+    """
     if settings.INIT_PARALLEL:
         init_parallel(controller)
     else:
         init_serial(controller)
 
-    api = api_factory(controller)
-    api.http.add_middleware(hug.middleware.CORSMiddleware(api, max_age=10))
-    api.http.serve(host=settings.MANAGER_LISTEN_HOST, port=settings.MANAGER_LISTEN_PORT)
+
+def run():
+    """
+    Initialize the OSRM controller and start the Flask server
+    """
+    init_controller()
+    app.run(host=settings.MANAGER_LISTEN_HOST, port=settings.MANAGER_LISTEN_PORT)
+
+
+if __name__ == "__main__":
+    run()

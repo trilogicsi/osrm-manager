@@ -73,5 +73,7 @@ To run the tests do the following:
 
 ```shell script
 cd tests
+docker-compose build test
 docker-compose run --rm test
 ``` 
+

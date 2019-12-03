@@ -142,7 +142,7 @@ RUN set -ex; \
 
 # INSTALL LOCAL PACKAGES AND COPY THE PROJECT SOURCES.
 # COPIED FROM: deploy/docker/python3.6-stretch/Dockerfile
-# build-essentiad was added because it is required for building twisted (python lib)
+# build-essentias was added because it is required for building twisted (python lib)
 
 # Note 1: Project root must be specified as build context
 
@@ -170,7 +170,12 @@ COPY ["Pipfile", "Pipfile.lock", "/opt/osrm-manager/"]
 ARG debug=false
 
 ENV PIPENV_CACHE_DIR=/tmp/pipenv_cache
-RUN if [ "$debug" = "false" ]; then (echo "Installing PRODUCTION deps." && pipenv install --deploy); else (echo "Installing DEV deps." && pipenv install --deploy --dev); fi && rm -rf /tmp/pipenv_cache
+RUN if [ "$debug" = "false" ]; then \
+  (echo "Installing PRODUCTION deps." && pipenv install --deploy); \
+  else \
+  (echo "Installing DEV deps." && pipenv install --deploy --dev); \
+  fi \
+  && rm -rf /tmp/pipenv_cache
 
 COPY ["osrm", "/opt/osrm-manager/osrm"]
 COPY ["tests", "/opt/osrm-manager/tests"]
@@ -180,4 +185,4 @@ ENV PYTHONPATH=/opt/osrm-manager
 
 EXPOSE 8000
 VOLUME ["/data"]
-CMD ["pipenv", "run", "python", "osrm/run.py"]
+CMD ["pipenv", "run", "python", "osrm/run_gunicorn.py"]
