@@ -17,9 +17,12 @@ gevent.monkey.patch_all()
 import gunicorn.app.base
 
 from gunicorn.six import iteritems
+from gunicorn.http import message
 
 from osrm.run import app as flask_app, init_controller
 from osrm import settings
+
+message.MAX_REQUEST_LINE = 100 * 1024  # 100 KB
 
 MAX_WORKERS = 4
 
@@ -29,6 +32,7 @@ OPTIONS = {
     "worker_class": "gevent",
     "threads": 1,
     "worker_connections": 1_000,
+    "limit_request_line": message.MAX_REQUEST_LINE,
 }
 
 

@@ -170,6 +170,7 @@ COPY ["Pipfile", "Pipfile.lock", "/opt/osrm-manager/"]
 ARG debug=false
 
 ENV PIPENV_CACHE_DIR=/tmp/pipenv_cache
+ENV PIPENV_VENV_IN_PROJECT=1
 RUN if [ "$debug" = "false" ]; then \
   (echo "Installing PRODUCTION deps." && pipenv install --deploy); \
   else \
@@ -182,6 +183,7 @@ COPY ["tests", "/opt/osrm-manager/tests"]
 COPY ["Pipfile", "Pipfile.lock", "/opt/osrm-manager/"]
 
 ENV PYTHONPATH=/opt/osrm-manager
+ENV PATH=/opt/osrm-manager/.venv/bin:${PATH}
 
 EXPOSE 8000
 VOLUME ["/data"]
