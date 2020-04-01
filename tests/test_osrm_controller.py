@@ -53,8 +53,8 @@ def test_restart_osrm_server():
         ) as start_osrm_server:
             controller.restart_osrm_server(server_id)
 
-    kill_osrm_server.asssert_called_with(server_id)
-    start_osrm_server.asssert_called_with(server_id)
+    kill_osrm_server.assert_called_with(server_id)
+    start_osrm_server.assert_called_with(server_id)
 
 
 def test_start_osrm_server():
