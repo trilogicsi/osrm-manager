@@ -22,3 +22,19 @@ CELERY_REDIS_DATABASE = int(os.environ.get("CELERY_REDIS_DB", "1"))
 INIT_PARALLEL = strtobool(os.environ.get("INIT_PARALLEL", "true"))
 
 OSRM_PREPROCESS_THREADS = int(os.environ.get("OSRM_PREPROCESS_THREADS", "4"))
+
+
+# OSRM Controller settings
+
+# Maximum number of spawned OSRM servers
+CONTROLLER_SERVER_LIMIT = int(
+    os.environ.get("CONTROLLER_SERVER_LIMIT", "20")
+)
+# Spawned server ports will start with this port number
+CONTROLLER_SERVER_START_PORT = int(
+    os.environ.get("CONTROLLER_SERVER_START_PORT", "15000")
+)
+# Maximum number of specified locations
+CONTROLLER_MAX_DISTANCE_MATRIX_SIZE = int(
+    os.environ.get("CONTROLLER_MAX_DISTANCE_MATRIX_SIZE", "200")
+)

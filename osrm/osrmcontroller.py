@@ -77,9 +77,12 @@ class OsrmController:
     # Number of seconds to wait for serve to stop before killing it
     SERVER_SHUTDOWN_TIME = 5
 
-    SERVER_LIMIT = 20  # Maximum number of spawned OSRM servers
-    SERVER_START_PORT = 15_000  # Spawned server ports will start with this port number
-    MAX_DISTANCE_MATRIX_SIZE = 200  # Maximum number of specified locations
+    # Maximum number of spawned OSRM servers
+    SERVER_LIMIT = settings.CONTROLLER_SERVER_LIMIT
+    # Spawned server ports will start with this port number
+    SERVER_START_PORT = settings.CONTROLLER_SERVER_START_PORT
+    # Maximum number of specified locations
+    MAX_DISTANCE_MATRIX_SIZE = settings.CONTROLLER_MAX_DISTANCE_MATRIX_SIZE
 
     EXTRACT_SAVE_DIR = "extract-saved"
 
@@ -359,7 +362,8 @@ class OsrmController:
 
         logger.info(
             f"OSRM server for {server_id.name} started "
-            f"(up for {self.SERVER_STARTUP_TIME}s)."
+            f"(up for {self.SERVER_STARTUP_TIME}s). "
+            f"Maximum table size: {self.MAX_DISTANCE_MATRIX_SIZE}"
         )
 
         proces_info = (process.pid, psutil.Process(process.pid).create_time())

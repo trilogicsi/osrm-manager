@@ -37,6 +37,7 @@ services:
     image: redis:4-alpine
 ```
 
+For a complete list of available environment variables see `osrm/settings.py`.
 
 ## Preparing the data
 
