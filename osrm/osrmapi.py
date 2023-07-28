@@ -22,7 +22,7 @@ OSRM_CONVERTER_NAME = "osrm"
 
 
 def retrying_requests() -> requests.Session:
-    """ Create a Requests session that retries it's requests for about 10 s. """
+    """Create a Requests session that retries it's requests for about 10 s."""
     session = requests.Session()
     retries = Retry(total=5, backoff_factor=0.3)  # Max 9.3 seconds of for all retries
     session.mount("http://", requests.adapters.HTTPAdapter(max_retries=retries))
@@ -30,7 +30,7 @@ def retrying_requests() -> requests.Session:
 
 
 def format_docstrings(docstring: bytes) -> str:
-    """ Fix the formatting of docstrings for a nicer display in API documentation. """
+    """Fix the formatting of docstrings for a nicer display in API documentation."""
     docstring = str(docstring).replace("\n", "")
     docstring = re.sub(r" +", " ", docstring)
     docstring = re.sub("^ ", "", docstring)

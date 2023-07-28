@@ -34,12 +34,12 @@ class OsrmServerId(NamedTuple):
 
     @property
     def osrm_file(self):
-        """ Return the filename of the extracted `.osrm` file. """
+        """Return the filename of the extracted `.osrm` file."""
         return self.data_base_name + ".osrm"
 
     @property
     def data_base_name(self):
-        """ Return the root of the data file name (ie. stripped of extension). """
+        """Return the root of the data file name (ie. stripped of extension)."""
         if not self.data.endswith(OsrmController.MAP_DATA_FILE_EXT):
             raise ValueError("Unknown format of data name.")
         return self.data[: -len(OsrmController.MAP_DATA_FILE_EXT)]
@@ -275,16 +275,18 @@ class OsrmController:
         :param server_id: id of osrm server
         """
         app.worker_main(
-            ["worker",
-             "--loglevel=INFO",
-             f"--queues=osrm_{server_id.name}_queue",
-             "--concurrency=1",
-             f"--hostname=osrm_{server_id.name}_worker"
-            ])
+            [
+                "worker",
+                "--loglevel=INFO",
+                f"--queues=osrm_{server_id.name}_queue",
+                "--concurrency=1",
+                f"--hostname=osrm_{server_id.name}_worker",
+            ]
+        )
 
     @property
     def server_names(self) -> List[str]:
-        """ Return the name of all the loaded/spawned servers. """
+        """Return the name of all the loaded/spawned servers."""
         return [server_id.name for server_id in self.server_ids]
 
     def get_process_for_server_id(self, server_id: OsrmServerId) -> psutil.Process:
@@ -319,7 +321,7 @@ class OsrmController:
         return statuses
 
     def get_server_id(self, server_name) -> OsrmServerId:
-        """ Get the OsrmServerId tuple from a server name."""
+        """Get the OsrmServerId tuple from a server name."""
         for server_id in self.server_ids:
             if server_id.name == server_name:
                 return server_id
@@ -337,16 +339,21 @@ class OsrmController:
             "-p",
             f"{port:d}",
             "--max-table-size",
-                f"{self.MAX_DISTANCE_MATRIX_SIZE:d}",
+            f"{self.MAX_DISTANCE_MATRIX_SIZE:d}",
         ]
-        
-        if "--algorithm" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS and "-a" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS:
-            args += ["--algorithm", "ch"]
-        
-        args += settings.OSRM_ROUTED_ADDITIONAL_ARGS + [server_id.get_file_abs_path(server_id.osrm_file, self.data_dir)]
-        
 
-        process = Popen(args,
+        if (
+            "--algorithm" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS
+            and "-a" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS
+        ):
+            args += ["--algorithm", "ch"]
+
+        args += settings.OSRM_ROUTED_ADDITIONAL_ARGS + [
+            server_id.get_file_abs_path(server_id.osrm_file, self.data_dir)
+        ]
+
+        process = Popen(
+            args,
             universal_newlines=True,
         )
         try:
@@ -566,7 +573,6 @@ class OsrmController:
         vehicle_type_data_files = []
 
         for dirpath, _, filenames in os.walk(data_dir):
-
             if os.path.abspath(os.path.dirname(dirpath)) != os.path.abspath(data_dir):
                 continue
 

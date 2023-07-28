@@ -27,9 +27,7 @@ OSRM_PREPROCESS_THREADS = int(os.environ.get("OSRM_PREPROCESS_THREADS", "4"))
 # OSRM Controller settings
 
 # Maximum number of spawned OSRM servers
-CONTROLLER_SERVER_LIMIT = int(
-    os.environ.get("CONTROLLER_SERVER_LIMIT", "20")
-)
+CONTROLLER_SERVER_LIMIT = int(os.environ.get("CONTROLLER_SERVER_LIMIT", "20"))
 # Spawned server ports will start with this port number
 CONTROLLER_SERVER_START_PORT = int(
     os.environ.get("CONTROLLER_SERVER_START_PORT", "15000")
