@@ -38,3 +38,6 @@ CONTROLLER_SERVER_START_PORT = int(
 CONTROLLER_MAX_DISTANCE_MATRIX_SIZE = int(
     os.environ.get("CONTROLLER_MAX_DISTANCE_MATRIX_SIZE", "200")
 )
+
+# Space separated list of addtitional arguments to pass to osrm-routed, eg.: "--algorithm ch --mmap=1"
+OSRM_ROUTED_ADDITIONAL_ARGS = os.environ.get("OSRM_ROUTED_ADDITIONAL_ARGS", "").split()

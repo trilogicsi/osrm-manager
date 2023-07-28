@@ -332,17 +332,21 @@ class OsrmController:
         port = self.port_bindings[server_id]
         logger.info(f"Starting OSRM server for {server_id.name} on port {port}")
 
-        process = Popen(
-            [
-                "osrm-routed",
-                "-p",
-                f"{port:d}",
-                "--algorithm",
-                "ch",
-                "--max-table-size",
+        args = [
+            "osrm-routed",
+            "-p",
+            f"{port:d}",
+            "--max-table-size",
                 f"{self.MAX_DISTANCE_MATRIX_SIZE:d}",
-                server_id.get_file_abs_path(server_id.osrm_file, self.data_dir),
-            ],
+        ]
+        
+        if "--algorithm" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS and "-a" not in settings.OSRM_ROUTED_ADDITIONAL_ARGS:
+            args += ["--algorithm", "ch"]
+        
+        args += settings.OSRM_ROUTED_ADDITIONAL_ARGS + [server_id.get_file_abs_path(server_id.osrm_file, self.data_dir)]
+        
+
+        process = Popen(args,
             universal_newlines=True,
         )
         try:
