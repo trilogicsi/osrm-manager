@@ -11,11 +11,11 @@ from werkzeug.routing import UnicodeConverter, ValidationError, Rule
 
 from osrm.osrmcontroller import OsrmController
 from osrm.tasks import (
+    extract as extract_task,
     contract as contract_task,
     restart as restart_task,
     revoke_all_scheduled_tasks_for_osrm_worker,
 )
-from osrm.tasks import extract as extract_task
 
 API_NAME = "OSRM Manager"
 OSRM_CONVERTER_NAME = "osrm"

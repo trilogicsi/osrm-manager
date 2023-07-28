@@ -15,7 +15,6 @@ from typing import List, NamedTuple, Dict, Tuple, Any, Optional
 
 import psutil
 import redis
-from celery.bin import worker
 
 from osrm import settings
 from osrm.osrm_celery import app
@@ -275,17 +274,13 @@ class OsrmController:
         Creates one celery worker and queue for specific osrm server.
         :param server_id: id of osrm server
         """
-
-        options = {
-            "loglevel": "INFO",
-            "traceback": True,
-            "queues": f"osrm_{server_id.name}_queue",
-            "concurrency": 1,
-            "hostname": f"osrm_{server_id.name}_worker",
-        }
-
-        server_worker = worker.worker(app=app)
-        server_worker.run(**options)
+        app.worker_main(
+            ["worker",
+             "--loglevel=INFO",
+             f"--queues=osrm_{server_id.name}_queue",
+             "--concurrency=1",
+             f"--hostname=osrm_{server_id.name}_worker"
+            ])
 
     @property
     def server_names(self) -> List[str]:

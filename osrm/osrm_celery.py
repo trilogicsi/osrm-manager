@@ -25,6 +25,7 @@ def get_app(redis_host: str, redis_port: int, db_index: int) -> Celery:
         "task_ignore_result": True,
         "result_expires": 10,
         "worker_log_format": "[%(asctime)s: %(levelname)s/%(processName)s] %(message)s",
+        "broker_connection_retry_on_startup": True,
     }
 
     celery_app.conf.update(config)

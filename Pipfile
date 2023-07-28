@@ -4,22 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-celery = {version = "*",extras = ['redis']}
-pydantic = "*"
-psutil = "*"
-requests = "*"
-redis = "*"
-flask = "*"
-flask-cors = "*"
-gunicorn = {version = "*", extras = ['gevent']}
+celery = {version = "~=5.3.1",extras = ['redis']}
+pydantic = "~=0.32.2"
+psutil = "~=5.6.3"
+requests = "~=2.22.0"
+redis = "~=4.6.0"
+flask = "==2.3.2"
+flask-cors = "==3.0.10"
+gunicorn = {version = "~=19.9.0", extras = ['gevent']}
 
 [dev-packages]
-pylint = "*"
-pylint-django = "*"
-pytest = "*"
+pylint = "~=2.17.5"
+pytest = "~=7.4.0"
 
 [requires]
-python_version = "3.6"
+python_version = "3.11"
 
 [pipenv]
 allow_prereleases = false

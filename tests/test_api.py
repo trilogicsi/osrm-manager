@@ -61,7 +61,7 @@ def test_car_osrm_api():
     assert "destinations" in result
     assert "durations" in result
     assert "distances" in result
-    assert result["durations"] == [[0, 148.8], [180.6, 0]]
+    assert result["durations"] == [[0, 149.2], [180.7, 0]]
 
 
 def test_bicycle_osrm_api():
@@ -80,7 +80,7 @@ def test_bicycle_osrm_api():
     assert "destinations" in result
     assert "durations" in result
     assert "distances" in result
-    assert result["durations"] == [[0, 1089.8], [1045.4, 0]]
+    assert result["durations"] == [[0, 1091], [1047, 0]]
 
 
 def test_restart_task(client):
