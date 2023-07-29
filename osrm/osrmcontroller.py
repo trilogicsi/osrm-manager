@@ -87,7 +87,6 @@ class OsrmController:
 
     # File extensions that have to be present in order to consider the extraction done
     EXTRACTED_EXT = [
-        ".osrm",
         ".osrm.cnbg",
         ".osrm.cnbg_to_ebg",
         ".osrm.ebg",
